@@ -58,7 +58,9 @@ class PSOFeatureSelection:
         """
         Sigmoid function to map velocity to probability
         """
-        return 1 / (1 + np.exp(-x))
+        # Clip to prevent numerical overflow
+        x_clipped = np.clip(x, -500, 500)
+        return 1 / (1 + np.exp(-x_clipped))
     
     def fitness_function(self, position, X, y):
         """
@@ -158,6 +160,12 @@ class PSOFeatureSelection:
             if score > self.gbest_score:
                 self.gbest_score = score
                 self.gbest_position = self.positions[i].copy()
+        
+        # Ensure we have a valid gbest_position
+        if self.gbest_position is None:
+            # If no particle scored better than -inf, use the first particle
+            self.gbest_position = self.positions[0].copy()
+            self.gbest_score = self.pbest_scores[0]
         
         # Main PSO loop
         for iteration in range(self.n_iterations):
